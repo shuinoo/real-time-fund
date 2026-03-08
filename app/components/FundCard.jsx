@@ -220,25 +220,25 @@ export default function FundCard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 4,
-                cursor: 'pointer',
+                cursor: layoutMode === 'drawer' ? 'default' : 'pointer',
               }}
-              onClick={() => onHoldingClick?.(f)}
+              onClick={() => layoutMode !== 'drawer' && onHoldingClick?.(f)}
             >
-              未设置 <SettingsIcon width="12" height="12" />
+              未设置  {layoutMode !== 'drawer' && <SettingsIcon width="12" height="12" />}
             </div>
           </div>
         ) : (
           <>
             <div
               className="stat"
-              style={{ cursor: 'pointer', flexDirection: 'column', gap: 4 }}
-              onClick={() => onActionClick?.(f)}
+              style={{ cursor: layoutMode === 'drawer' ? 'default' : 'pointer', flexDirection: 'column', gap: 4 }}
+              onClick={() => layoutMode !== 'drawer' && onActionClick?.(f)}
             >
               <span
                 className="label"
                 style={{ display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                持仓金额 <SettingsIcon width="12" height="12" style={{ opacity: 0.7 }} />
+                持仓金额 {layoutMode !== 'drawer' && <SettingsIcon width="12" height="12" style={{ opacity: 0.7 }} />}
               </span>
               <span className="value">¥{profit.amount.toFixed(2)}</span>
             </div>
@@ -267,12 +267,12 @@ export default function FundCard({
                   e.stopPropagation();
                   onPercentModeToggle?.(f.code);
                 }}
-                style={{ cursor: 'pointer', flexDirection: 'column', gap: 4 }}
+                style={{ cursor: 'pointer', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}
                 title="点击切换金额/百分比"
               >
                 <span
                   className="label"
-                  style={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end' }}
                 >
                   持有收益{percentModes?.[f.code] ? '(%)' : ''}
                   <SwitchIcon />
