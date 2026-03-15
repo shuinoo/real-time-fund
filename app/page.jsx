@@ -1283,7 +1283,7 @@ export default function HomePage() {
     });
   };
 
-  const confirmScanImport = async (targetGroupId = 'all') => {
+  const confirmScanImport = async (targetGroupId = 'all', expandAfterAdd = true) => {
     const codes = Array.from(selectedScannedCodes);
     if (codes.length === 0) {
       showToast('请至少选择一个基金代码', 'error');
@@ -1339,6 +1339,8 @@ export default function HomePage() {
       }
 
       if (newFunds.length > 0) {
+        const newCodesSet = new Set(newFunds.map((f) => f.code));
+
         setFunds(prev => {
           const updated = dedupeByCode([...newFunds, ...prev]);
           storageHelper.setItem('funds', JSON.stringify(updated));
@@ -1360,6 +1362,22 @@ export default function HomePage() {
           }
         });
         if (Object.keys(nextSeries).length > 0) setValuationSeries(prev => ({ ...prev, ...nextSeries }));
+
+        if (!expandAfterAdd) {
+          // 用户关闭“添加后展开详情”：将新添加基金的卡片和业绩走势都标记为收起
+          setCollapsedCodes(prev => {
+            const next = new Set(prev);
+            newCodesSet.forEach((code) => next.add(code));
+            storageHelper.setItem('collapsedCodes', JSON.stringify(Array.from(next)));
+            return next;
+          });
+          setCollapsedTrends(prev => {
+            const next = new Set(prev);
+            newCodesSet.forEach((code) => next.add(code));
+            storageHelper.setItem('collapsedTrends', JSON.stringify(Array.from(next)));
+            return next;
+          });
+        }
 
         if (targetGroupId === 'fav') {
           setFavorites(prev => {
