@@ -1271,12 +1271,12 @@ export default function HomePage() {
       return tempGroupHoldings[tradeGid][fundCode] || { share: 0, cost: 0 };
     };
 
-    const writeCurrent = (fundCode, tradeGid, share, cost) => {
+    const writeCurrent = (fundCode, tradeGid, share, cost, extra = {}) => {
       if (!tradeGid) {
-        tempHoldings[fundCode] = { share, cost };
+        tempHoldings[fundCode] = { share, cost, ...extra };
       } else {
         if (!tempGroupHoldings[tradeGid]) tempGroupHoldings[tradeGid] = {};
-        tempGroupHoldings[tradeGid][fundCode] = { share, cost };
+        tempGroupHoldings[tradeGid][fundCode] = { share, cost, ...extra };
       }
     };
 
@@ -1316,7 +1316,10 @@ export default function HomePage() {
              tradeAmount = trade.share * result.value;
         }
 
-        writeCurrent(trade.fundCode, tradeGid, newShare, newCost);
+        writeCurrent(trade.fundCode, tradeGid, newShare, newCost, {
+          ...(current.firstPurchaseDate ? { firstPurchaseDate: current.firstPurchaseDate } : {}),
+          ...(trade.type === 'buy' && !current.firstPurchaseDate && result.date ? { firstPurchaseDate: result.date } : {}),
+        });
         stateChanged = true;
         processedIds.add(trade.id);
 
@@ -1480,7 +1483,12 @@ export default function HomePage() {
       if (newShare === 0) newCost = 0;
     }
 
-    handleSaveHolding(fund.code, { share: newShare, cost: newCost });
+    handleSaveHolding(fund.code, {
+      share: newShare,
+      cost: newCost,
+      ...(current.firstPurchaseDate ? { firstPurchaseDate: current.firstPurchaseDate } : {}),
+      ...(isBuy && !current.firstPurchaseDate && data.date ? { firstPurchaseDate: data.date } : {}),
+    });
 
     setTransactions(prev => {
       const curList = prev[fund.code] || [];
