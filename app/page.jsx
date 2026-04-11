@@ -12,11 +12,19 @@ import timezone from 'dayjs/plugin/timezone';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { isNumber, isString, isPlainObject } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
+import { toast as sonnerToast } from 'sonner';
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import Announcement from "./components/Announcement";
 import EmptyStateCard from "./components/EmptyStateCard";
 import FundCard from "./components/FundCard";
 import GroupSummary from "./components/GroupSummary";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from "@/components/ui/empty"
 import {
   CloseIcon,
   EyeIcon,
@@ -65,7 +73,6 @@ import MarketIndexAccordion from "./components/MarketIndexAccordion";
 import SortSettingModal from "./components/SortSettingModal";
 import githubImg from "./assets/github.svg";
 import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { toast as sonnerToast } from 'sonner';
 import { recordValuation, getAllValuationSeries, clearFund } from './lib/valuationTimeseries';
 import {
   DAILY_EARNINGS_SCOPE_ALL,
@@ -84,13 +91,7 @@ import MineTab from './components/MineTab';
 import SearchFund from './components/SearchFund';
 import MyEarningsCalendarPage from './components/MyEarningsCalendarPage';
 import { useFundFuzzyMatcher } from './hooks/useFundFuzzyMatcher';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useUserStore, clearAuthUser, setAuthUser } from './stores';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -427,8 +428,8 @@ export default function HomePage() {
   // 全局隐藏金额状态（影响分组汇总、列表和卡片）
   const [maskAmounts, setMaskAmounts] = useState(false);
 
-  // 用户认证状态
-  const [user, setUser] = useState(null);
+  // 用户认证状态（Supabase 会话仍由客户端持久化；用户信息由 zustand 全局管理）
+  const user = useUserStore((s) => s.user);
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
   useEffect(() => {
@@ -3117,12 +3118,12 @@ export default function HomePage() {
   // 初始化认证状态监听
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setUser(null);
+      clearAuthUser();
       setUserMenuOpen(false);
       return;
     }
     const clearAuthState = () => {
-      setUser(null);
+      clearAuthUser();
       setUserMenuOpen(false);
     };
 
@@ -3161,7 +3162,7 @@ export default function HomePage() {
         setLoginModalOpen(true);
         return;
       }
-      setUser(session.user);
+      setAuthUser(session.user);
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         setLoginModalOpen(false);
         setLoginEmail('');
@@ -3194,29 +3195,29 @@ export default function HomePage() {
   }, []);
 
   // 实时同步
-  // useEffect(() => {
-  //   if (!isSupabaseConfigured || !user?.id) return;
-  //   const channel = supabase
-  //     .channel(`user-configs-${user.id}`)
-  //     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_configs', filter: `user_id=eq.${user.id}` }, async (payload) => {
-  //       const incoming = payload?.new?.data;
-  //       if (!isPlainObject(incoming)) return;
-  //       const incomingComparable = getComparablePayload(incoming);
-  //       if (!incomingComparable || incomingComparable === lastSyncedRef.current) return;
-  //       await applyCloudConfig(incoming, payload.new.updated_at);
-  //     })
-  //     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_configs', filter: `user_id=eq.${user.id}` }, async (payload) => {
-  //       const incoming = payload?.new?.data;
-  //       if (!isPlainObject(incoming)) return;
-  //       const incomingComparable = getComparablePayload(incoming);
-  //       if (!incomingComparable || incomingComparable === lastSyncedRef.current) return;
-  //       await applyCloudConfig(incoming, payload.new.updated_at);
-  //     })
-  //     .subscribe();
-  //   return () => {
-  //     supabase.removeChannel(channel);
-  //   };
-  // }, [user?.id]);
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user?.id) return;
+    const channel = supabase
+      .channel(`user-configs-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_configs', filter: `user_id=eq.${user.id}` }, async (payload) => {
+        const incoming = payload?.new?.data;
+        if (!isPlainObject(incoming)) return;
+        const incomingComparable = getComparablePayload(incoming);
+        if (!incomingComparable || incomingComparable === lastSyncedRef.current) return;
+        await applyCloudConfig(incoming, payload.new.updated_at);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_configs', filter: `user_id=eq.${user.id}` }, async (payload) => {
+        const incoming = payload?.new?.data;
+        if (!isPlainObject(incoming)) return;
+        const incomingComparable = getComparablePayload(incoming);
+        if (!incomingComparable || incomingComparable === lastSyncedRef.current) return;
+        await applyCloudConfig(incoming, payload.new.updated_at);
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
@@ -3326,7 +3327,7 @@ export default function HomePage() {
       setLoginEmail('');
       setLoginOtp('');
       setUserMenuOpen(false);
-      setUser(null);
+      clearAuthUser();
       return;
     }
     try {
@@ -3366,7 +3367,7 @@ export default function HomePage() {
       setLoginEmail('');
       setLoginOtp('');
       setUserMenuOpen(false);
-      setUser(null);
+      clearAuthUser();
     }
   };
 
