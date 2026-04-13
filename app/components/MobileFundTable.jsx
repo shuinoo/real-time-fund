@@ -1408,7 +1408,9 @@ export default function MobileFundTable({
             : '—';
           return (
             <div style={{ textAlign: 'right' }}>
-              <span className={cls} style={{ fontWeight: 700 }}>{text}</span>
+              <FitText className={cls} style={{ fontWeight: 700 }} maxFontSize={14} minFontSize={10} as="div">
+                {text}
+              </FitText>
             </div>
           );
         },
@@ -1427,7 +1429,9 @@ export default function MobileFundTable({
             : '—';
           return (
             <div style={{ textAlign: 'right' }}>
-              <span className={cls} style={{ fontWeight: 700 }}>{text}</span>
+              <FitText className={cls} style={{ fontWeight: 700 }} maxFontSize={14} minFontSize={10} as="div">
+                {text}
+              </FitText>
             </div>
           );
         },
@@ -1446,7 +1450,9 @@ export default function MobileFundTable({
             : '—';
           return (
             <div style={{ textAlign: 'right' }}>
-              <span className={cls} style={{ fontWeight: 700 }}>{text}</span>
+              <FitText className={cls} style={{ fontWeight: 700 }} maxFontSize={14} minFontSize={10} as="div">
+                {text}
+              </FitText>
             </div>
           );
         },
@@ -1465,7 +1471,9 @@ export default function MobileFundTable({
             : '—';
           return (
             <div style={{ textAlign: 'right' }}>
-              <span className={cls} style={{ fontWeight: 700 }}>{text}</span>
+              <FitText className={cls} style={{ fontWeight: 700 }} maxFontSize={14} minFontSize={10} as="div">
+                {text}
+              </FitText>
             </div>
           );
         },
@@ -1484,7 +1492,9 @@ export default function MobileFundTable({
             : '—';
           return (
             <div style={{ textAlign: 'right' }}>
-              <span className={cls} style={{ fontWeight: 700 }}>{text}</span>
+              <FitText className={cls} style={{ fontWeight: 700 }} maxFontSize={14} minFontSize={10} as="div">
+                {text}
+              </FitText>
             </div>
           );
         },
